@@ -1,5 +1,7 @@
-﻿using System.Threading;
+﻿using System.Threading.Tasks;
+using System.Threading;
 using UnityEngine;
+using System.Collections;
 using UnityStandardAssets.Vehicles.Car;
 
 public class QLearner : MonoBehaviour
@@ -29,7 +31,7 @@ public class QLearner : MonoBehaviour
     //hyperparameters
     private int episodes = 1000;
     private float[] rewards = new float[1000];
-    private int maxSteps = 100;
+    private int maxSteps = 10000;
     private float alpha = .5f;
     private float gamma = .99f;
     //epsilon greedy parameters
@@ -46,6 +48,9 @@ public class QLearner : MonoBehaviour
     private Vector3 initPosition;
     private Quaternion initOrientation;
 
+    //needed for performing action
+    byte numFrame = 0;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -57,7 +62,8 @@ public class QLearner : MonoBehaviour
         initPosition = transform.position;
         initOrientation = transform.rotation;
         //start q-function learning
-       // executeLearning();
+        createRewardTable();
+        StartCoroutine(executeLearning());
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -65,7 +71,7 @@ public class QLearner : MonoBehaviour
         collided = true;
     }
 
-    public void executeLearning()
+    public IEnumerator executeLearning()
     {
         float currentReward;
         float randValue;
@@ -91,6 +97,11 @@ public class QLearner : MonoBehaviour
 
             for (int step = 0; step < maxSteps && !collided; step++)
             {
+                //stops this method and lets the game engine to elaborate the current frame
+                yield return null;
+                if (numFrame != 10)
+                    continue;
+                numFrame = 0;
                 state = raycastController.getCurrentState(state);
                 randValue = (float)((rand.Next(0, 1000)) / 1000);
                 if (randValue > epsilon)
@@ -122,10 +133,15 @@ public class QLearner : MonoBehaviour
         }
     }
 
+    public void Update()
+    {
+        numFrame++;
+    }
+
     private byte[] detectCollisionSide(byte[] state)
     {
         for (byte i = 0; i < state.Length; i++)
-            state[i] = state[i] == 0 ? state[i] = 5 : state[i];
+            state[i] = state[i] == 0 ? state[i] = 4 : state[i];
         return state;
     }
 
@@ -185,8 +201,6 @@ public class QLearner : MonoBehaviour
                 carUserControl.setVertical(-1);
                 break;
         }
-        //performing action
-        Thread.Sleep(300);        
     }
 
     private void createRewardTable()
@@ -226,6 +240,6 @@ public class QLearner : MonoBehaviour
 
     private float getReward(byte[] state)
     {
-        return rewardTable[state[0], state[1], state[2], state[3], state[4]];
+        return rewardTable[state[0], state[1], state[2], state[3], state[4]] * Mathf.Abs((rigidbody.velocity.x+ rigidbody.velocity.y+ rigidbody.velocity.z));
     }
 }
