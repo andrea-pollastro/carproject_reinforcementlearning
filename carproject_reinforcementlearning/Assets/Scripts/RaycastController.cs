@@ -1,20 +1,37 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class RaycastController : MonoBehaviour
 {
-    //Variables for the ray
+    //Objects needed for the rays' description and raycasting
     private static int nRays = 5;
     private float[] maxLenghtRay = new float[nRays];
     private Ray[] rays = new Ray[nRays];
-    private byte numZones = 4;
-    private bool collided = false;
-    private Rigidbody rigidbody;
-
-    //Oggetto necessario per trovare l'intersezione dei raggi con la scena
+    public static byte numRayIntervals = 5;
+    public static byte numAccelerationIntervals = 3;
     private RaycastHit hit;
-    private byte[] currentState = new byte[7];
+
+    /*
+     * Acceleration mapping:
+     * 0: negative acceleration
+     * 1: zero acceleration
+     * 2: positive acceleration
+     * (this mapping is useful for accessing to the Q-table matrix, for this reason we didn't use -1,0,1)
+     * 
+     * Rays mapping:
+     * 0: collision
+     * 1: red
+     * 2: orange
+     * 3: yellow
+     * 4: green
+     */
+
+    //Physics controller
+    private Rigidbody rigidbody;
+    private Vector3 localVelocity;
+    private bool collided = false;
+    
+    //Current state
+    private byte[] state = new byte[] { 4, 4, 4, 4, 4, 0 };
 
     void Start()
     {
@@ -29,86 +46,83 @@ public class RaycastController : MonoBehaviour
     //callback pre-frame
     void FixedUpdate()
     {
-        //Angolo di apertura totale: 120
-        int angle = -40;
+        if (!collided)
+        {
+            //Angle coverage: 120 degrees
+            int angle = -40;
 
-        //Creazione raggi
-        for(byte i = 0; i < nRays; i++){
-            rays[i] = new Ray(transform.position, Quaternion.AngleAxis(angle, Vector3.up) * transform.forward);
-            angle += 20;
-            currentState[i] = 4;
-        }
+            //Rays creation
+            for (byte i = 0; i < nRays; i++)
+            {
+                rays[i] = new Ray(transform.position, Quaternion.AngleAxis(angle, Vector3.up) * transform.forward);
+                angle += 20;
+            }
 
-        //Disegno raggi
-        for(byte i = 0; i < nRays; i++)
-            Debug.DrawRay(rays[i].origin, rays[i].direction * maxLenghtRay[i], Color.green);
-        
-        //Raycasting
-        for(byte i = 0; i < nRays; i++){
-            if (Physics.Raycast(rays[i], out hit, maxLenghtRay[i])){
-                Vector3 res = hit.point - transform.position;
+            //Rays drawing
+            for (byte i = 0; i < nRays; i++)
+                Debug.DrawRay(rays[i].origin, rays[i].direction * maxLenghtRay[i], Color.green);
 
-                if (res.magnitude < (maxLenghtRay[i]/numZones))
+            //Raycasting
+            for (byte i = 0; i < nRays; i++)
+            {
+                if (Physics.Raycast(rays[i], out hit, maxLenghtRay[i]))
                 {
-                    Debug.DrawLine(transform.position, hit.point, Color.red);
-                    currentState[i] = 1;
-                }
-                else if (res.magnitude < (maxLenghtRay[i] / numZones)*2)
-                {
-                    Debug.DrawLine(transform.position, hit.point, Color.HSVToRGB((float).108, 1, 1));
-                    currentState[i] = 2;
-                }
-                else if(res.magnitude < (maxLenghtRay[i] / numZones) * 3)
-                {
-                    Debug.DrawLine(transform.position, hit.point, Color.yellow);
-                    currentState[i] = 3;
-                }
-                else
-                {
-                    Debug.DrawLine(transform.position, hit.point, Color.green);
-                    currentState[i] = 4;
+                    Vector3 res = hit.point - transform.position;
+
+                    if (res.magnitude < (maxLenghtRay[i] / (numRayIntervals - 1)))
+                    {
+                        Debug.DrawLine(transform.position, hit.point, Color.red);
+                        state[i] = 1;
+                    }
+                    else if (res.magnitude < (maxLenghtRay[i] / (numRayIntervals - 1)) * 2)
+                    {
+                        Debug.DrawLine(transform.position, hit.point, Color.HSVToRGB((float).108, 1, 1));
+                        state[i] = 2;
+                    }
+                    else if (res.magnitude < (maxLenghtRay[i] / (numRayIntervals - 1)) * 3)
+                    {
+                        Debug.DrawLine(transform.position, hit.point, Color.yellow);
+                        state[i] = 3;
+                    }
+                    else
+                    {
+                        state[i] = 4;
+                    }
                 }
             }
+            state[5] = detectVelocityDirection(transform.InverseTransformDirection(rigidbody.velocity).z);
         }
+    }
 
-        currentState[5] = (byte)normalize(transform.InverseTransformDirection(rigidbody.velocity).x);//rigidbody.velocity.x);
-        currentState[6] = (byte)normalize(transform.InverseTransformDirection(rigidbody.velocity).z);//rigidbody.velocity.z);
+    public void resetCurrentState()
+    {
+        state[0] = state[1] = state[2] = state[3] = state[4] = 4;
+        state[5] = 0;
+        collided = false;
     }
 
     public byte[] getCurrentState()
     {
-        byte[] state = new byte[currentState.Length];
-
-        for (byte i = 0; i < currentState.Length; i++)
-            state[i] = currentState[i];
-        return state;
+        return (byte[])state.Clone();
     }
 
     private void OnCollisionEnter(Collision collision)
     {
-        byte minIndex = 0;
-        byte minValue = 0;
         collided = true;
-        for (byte i = 1; i < currentState.Length; i++)
+        byte minIndex = 0;
+        for (byte i = 1; i < nRays; i++)
         {
-            if (currentState[i] < currentState[minIndex])
+            if (state[i] < state[minIndex])
                 minIndex = i;
         }
-        currentState[minIndex] = 0;
+        state[minIndex] = 0;
     }
 
-    private int normalize(float vel)
+    private byte detectVelocityDirection(float vel)
     {
-        
-        if (vel > 8)
-            return 4;
-        else if (vel > 4)
-            return 3;
-        else if (vel > 0)
-            return 2;
-        else if (vel > -2)
+        if (Mathf.Abs(vel) < 1e-2)
             return 1;
-        else 
-            return 0;
+        else
+            return (byte)(vel > 0 ? 2 : 0);
     }
 }
