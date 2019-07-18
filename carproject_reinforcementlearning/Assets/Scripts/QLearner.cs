@@ -9,7 +9,7 @@ public class QLearner : MonoBehaviour
 {
     //hyperparameters
     private int maxSteps = 150;
-    private static int numEpisodes = 5000;
+    private static int numEpisodes = 1;
     private float[] rewards = new float[numEpisodes];
     private float alpha = .1f;
     private float gamma = .99f;
@@ -368,6 +368,9 @@ public class QLearner : MonoBehaviour
     private void writeQtableValuesOnFile()
     {
         String path = Application.dataPath + Path.DirectorySeparatorChar + "qtablevalues.txt";
+        if (File.Exists(path))
+            File.Delete(path);
+
         using (TextWriter tw = new StreamWriter(path))
         {
             for (byte a = 0; a < RaycastController.numRayIntervals; a++)
@@ -384,6 +387,9 @@ public class QLearner : MonoBehaviour
     private void writeRewardsOnFile()
     {
         String path = Application.dataPath + Path.DirectorySeparatorChar + "rewardsperepisode.txt";
+        if (File.Exists(path))
+            File.Delete(path);
+
         using (TextWriter tw = new StreamWriter(path))
         {
             for (int i = 0; i < numEpisodes; i++)
