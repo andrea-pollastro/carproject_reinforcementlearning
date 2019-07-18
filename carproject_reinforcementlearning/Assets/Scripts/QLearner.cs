@@ -9,7 +9,7 @@ public class QLearner : MonoBehaviour
 {
     //hyperparameters
     private int maxSteps = 150;
-    private static int numEpisodes = 1;
+    private static int numEpisodes = 5000;
     private float[] rewards = new float[numEpisodes];
     private float alpha = .1f;
     private float gamma = .99f;
