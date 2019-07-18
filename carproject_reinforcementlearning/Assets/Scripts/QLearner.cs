@@ -31,7 +31,7 @@ public class QLearner : MonoBehaviour
     private readonly System.Random rand = new System.Random();
 
     //Actions
-    private enum Actions
+    public enum Actions
     {
         left_accelleration,
         left_only,
@@ -64,13 +64,21 @@ public class QLearner : MonoBehaviour
 
     void Start()
     {
+        bool learn = true;
         //Getting components for driving the car
         carUserControl = GetComponent<CarUserControl>();
         rigidbody = GetComponent<Rigidbody>();
         raycastController = GetComponent<RaycastController>();
 
-        //Executing the routine for learning
-        StartCoroutine(executeLearning());
+        if (learn) { 
+            //Executing the routine for learning
+            StartCoroutine(executeLearning());
+        }
+        else
+        {
+            readQFunctionValues();
+            StartCoroutine(playGame());
+        }
     }
 
     /*
@@ -118,6 +126,9 @@ public class QLearner : MonoBehaviour
                 newPosition = transform.position;
                 do
                 {
+                    //We want to simplify the model since we're in a discrete case
+                    rigidbody.velocity = velocityLimiter(rigidbody.velocity);
+
                     oldPosition = newPosition;
                     yield return null;
                     newPosition = transform.position;
@@ -153,6 +164,49 @@ public class QLearner : MonoBehaviour
         writeRewardsOnFile();
         //Shutdown
         UnityEditor.EditorApplication.isPlaying = false;
+    }
+
+    public IEnumerator playGame()
+    {
+        Debug.Log("Starting game...");
+        byte action;
+        byte[] state = new byte[6];
+        byte[] nextState = new byte[6];
+
+        Vector3 oldPosition, newPosition;
+        for (int episode = 0; episode < numEpisodes; episode++)
+        {
+            Debug.Log("Starting episode " + episode);
+            initCarState();
+            state = raycastController.getCurrentState();
+            while (!collided)
+            {
+                action = maximize(state);
+                performAction(carUserControl, (Actions)action);
+
+                newPosition = transform.position;
+                do
+                {
+                    rigidbody.velocity = velocityLimiter(rigidbody.velocity);
+
+                    oldPosition = newPosition;
+                    yield return null;
+                    newPosition = transform.position;
+                    if (newPosition == oldPosition)
+                        break;
+                    nextState = raycastController.getCurrentState();
+                } while (compareArrays(state, nextState));
+
+                state = nextState;
+            }
+        }
+    }
+
+    private Vector3 velocityLimiter(Vector3 velocity)
+    {
+        Vector3 localVelocity = transform.InverseTransformDirection(velocity);
+        localVelocity.z = localVelocity.z > 11 ? 11 : localVelocity.z;
+        return transform.TransformDirection(localVelocity);
     }
 
     private void initCarState()
@@ -289,14 +343,14 @@ public class QLearner : MonoBehaviour
         }
         else if(sensorReward <= 5 && sensorReward > -1.5)
         {
-            if (state[VELOCITY] == 0 || state[VELOCITY] == 1)
+            if (state[VELOCITY] == 0)
                 velocityReward = 5;
             else
                 velocityReward = -10;
         }
         else if(sensorReward <= -1.5 && sensorReward > -5)
         {
-            if (state[VELOCITY] == 0 || state[VELOCITY] == 1)
+            if (state[VELOCITY] == 0)
                 velocityReward = 15;
             else
                 velocityReward = -30;
@@ -335,5 +389,21 @@ public class QLearner : MonoBehaviour
             for (int i = 0; i < numEpisodes; i++)
                 tw.WriteLine(rewards[i]);
         }
+    }
+
+    private void readQFunctionValues()
+    {
+        String path = Application.dataPath + Path.DirectorySeparatorChar + "qtablevalues.txt";
+        string[] lines = File.ReadAllLines(path);
+        int index = 0;
+
+        for (byte a = 0; a < RaycastController.numRayIntervals; a++)
+            for (byte b = 0; b < RaycastController.numRayIntervals; b++)
+                for (byte c = 0; c < RaycastController.numRayIntervals; c++)
+                    for (byte d = 0; d < RaycastController.numRayIntervals; d++)
+                        for (byte e = 0; e < RaycastController.numRayIntervals; e++)
+                            for (byte f = 0; f < RaycastController.numAccelerationIntervals; f++)
+                                for (byte g = 0; g < QLearner.numActions; g++)
+                                    qTable[a, b, c, d, e, f, g] = float.Parse(lines[index++]);
     }
 }
