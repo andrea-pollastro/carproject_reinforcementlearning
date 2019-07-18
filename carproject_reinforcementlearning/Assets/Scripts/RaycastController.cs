@@ -69,12 +69,12 @@ public class RaycastController : MonoBehaviour
                 {
                     Vector3 res = hit.point - transform.position;
 
-                    if (res.magnitude < (maxLenghtRay[i] / (numRayIntervals - 1)))
+                    if (res.magnitude < (maxLenghtRay[i] / (numRayIntervals - 1)) + 1.5)
                     {
                         Debug.DrawLine(transform.position, hit.point, Color.red);
                         state[i] = 1;
                     }
-                    else if (res.magnitude < (maxLenghtRay[i] / (numRayIntervals - 1)) * 2)
+                    else if (res.magnitude < (maxLenghtRay[i] / (numRayIntervals - 1)) * 2 + .5)
                     {
                         Debug.DrawLine(transform.position, hit.point, Color.HSVToRGB((float).108, 1, 1));
                         state[i] = 2;

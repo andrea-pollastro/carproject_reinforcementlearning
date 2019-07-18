@@ -9,7 +9,7 @@ public class QLearner : MonoBehaviour
 {
     //hyperparameters
     private int maxSteps = 150;
-    private static int numEpisodes = 10000;
+    private static int numEpisodes = 5000;
     private float[] rewards = new float[numEpisodes];
     private float alpha = .1f;
     private float gamma = .99f;
@@ -18,7 +18,7 @@ public class QLearner : MonoBehaviour
     private float epsilon = 1f;
     private float min_exploration_rate = .01f;
     private float max_exploration_rate = 1f;
-    private float exploration_decay_rate = .01f;
+    private float exploration_decay_rate = .001f;
 
     //Controller needed to manage the car and to reset it's condition
     private CarUserControl carUserControl;
@@ -100,7 +100,7 @@ public class QLearner : MonoBehaviour
                  * Epsilon-greedy algorithm: if that rand value is greater than a fixed epsilon, we perform ad exploitation. Instead, we perform 
                  * the exploration
                  * */
-                randValue = (rand.Next(0, 100)) / 100f;
+                randValue = (rand.Next(0, 1000)) / 1000f;
                 if (randValue > epsilon)
                     action = maximize(state);
                 else
@@ -225,7 +225,7 @@ public class QLearner : MonoBehaviour
                 break;
             case Actions.straight_accelleration:
                 carUserControl.setHorizontal(0);
-                carUserControl.setVertical(0.7f);
+                carUserControl.setVertical(0.6f);
                 break;
             case Actions.straight_only:
                 carUserControl.setHorizontal(0);
@@ -273,7 +273,7 @@ public class QLearner : MonoBehaviour
         /*
          * Acceleration's direction gives a bonus (or a penalty) on the reward.
          * The idea is this one: 
-         * if we can run (that means, if we have all rays green or all rays yellow or a mixed state between these two), 
+         * if we can run (that means, if we have all rays green or at least one rays yellow), 
          * it means that we must accelerate. For this reason, if the acceleration is positive, we give
          * a bonus, in the other cases we give a penalty.
          * Other cases are similar to this one. 
@@ -283,28 +283,28 @@ public class QLearner : MonoBehaviour
         if(sensorReward <= 10 && sensorReward > 5)
         {
             if (state[VELOCITY] == 2)
-                velocityReward = 20;
+                velocityReward = 30;
             else
                 velocityReward = -50;
         }
         else if(sensorReward <= 5 && sensorReward > -1.5)
         {
-            if (state[VELOCITY] == 0)
-                velocityReward = -5;
+            if (state[VELOCITY] == 0 || state[VELOCITY] == 1)
+                velocityReward = 5;
             else
                 velocityReward = -10;
         }
         else if(sensorReward <= -1.5 && sensorReward > -5)
         {
-            if (state[VELOCITY] == 0)
-                velocityReward = 5;
+            if (state[VELOCITY] == 0 || state[VELOCITY] == 1)
+                velocityReward = 15;
             else
-                velocityReward = -20;
+                velocityReward = -30;
         }
         else
         {
             if (state[VELOCITY] == 0)
-                velocityReward = 20;
+                velocityReward = 30;
             else
                 velocityReward = -50;
         }
