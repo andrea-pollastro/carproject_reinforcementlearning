@@ -7,12 +7,13 @@ using UnityStandardAssets.Vehicles.Car;
 
 public class QLearner : MonoBehaviour
 {
+    private byte frame = 0;
     //hyperparameters
-    private int maxSteps = 150;
-    private static int numEpisodes = 1;
+    private int T = 150;
+    private static int numEpisodes = 5000;
     private float[] rewards = new float[numEpisodes];
     private float alpha = .1f;
-    private float gamma = .99f;
+    private float gamma = .9f;
 
     //epsilon greedy parameters
     private float epsilon = 1f;
@@ -53,7 +54,7 @@ public class QLearner : MonoBehaviour
         RaycastController.numRayIntervals,
         RaycastController.numAccelerationIntervals,
         numActions];
-
+    
     //Constants used for describe state's elements
     private const byte RAY_SX = 0;
     private const byte RAY_SX_MIDDLE = 1;
@@ -86,78 +87,55 @@ public class QLearner : MonoBehaviour
      */ 
     public IEnumerator executeLearning()
     {
-        float currentReward, randValue;
+        float episodeReward;
+        float reward;
         byte action;
         
         byte[] state = new byte[6];
-        byte[] nextState = new byte[6];
-
-        Vector3 oldPosition, newPosition;
+        byte[] nextstate = new byte[6];
         
         for (int episode = 0; episode < numEpisodes; episode++)
         {
-            //init state
+            //init game
             initCarState();
-            //init the cycle variables and the initial state
-            currentReward = 0;
+            episodeReward = 0;
             state = raycastController.getCurrentState();
 
-            for (int step = 0; step < maxSteps && !collided; step++)
+            for (int t = 0; t < T && !collided; t++)
             {
-                /*
-                 * Epsilon-greedy algorithm: if that rand value is greater than a fixed epsilon, we perform ad exploitation. Instead, we perform 
-                 * the exploration
-                 * */
-                randValue = (rand.Next(0, 1000)) / 1000f;
-                if (randValue > epsilon)
-                    action = maximize(state);
-                else
-                    action = (byte)rand.Next(0, 9);
-                
-                //Once the action is chosen, we can perform it
+                //epsilon-greedy algorithm
+                action = epsilonGreedy(state);
+
+                //perform action and find new state
+                //yield return step(state, nextstate, (Actions)action);
                 performAction(carUserControl, (Actions)action);
-
-                /*
-                 * We wait until car doesn't change it's state
-                 * For avoiding deadlocks (i.e., if the car has velocity zero and
-                 * has "right_only", it's state will never change), we make a check on 
-                 * the car's coordinates on the map
-                 */
-                newPosition = transform.position;
-                do
-                {
-                    //We want to simplify the model since we're in a discrete case
-                    rigidbody.velocity = velocityLimiter(rigidbody.velocity);
-
-                    oldPosition = newPosition;
+                while (frame < 15)
                     yield return null;
-                    newPosition = transform.position;
-                    if (newPosition == oldPosition)
-                        break;
-                    nextState = raycastController.getCurrentState();
-                } while (compareArrays(state, nextState));
+                frame = 0;
+                nextstate = raycastController.getCurrentState();
 
-                /*
-                 * Bellman equation: needed for approximate the Q-function
-                 */
+                reward = reclameReward(state, action, nextstate);
+                Debug.Log("Reward: " + reward);
+                
+                //Bellman equation
                 qTable[state[RAY_SX], state[RAY_SX_MIDDLE], state[RAY_MIDDLE], state[RAY_DX_MIDDLE], state[RAY_DX], state[VELOCITY], action] =
                     qTable[state[RAY_SX], state[RAY_SX_MIDDLE], state[RAY_MIDDLE], state[RAY_DX_MIDDLE], state[RAY_DX], state[VELOCITY], action]
-                    * (1 - alpha) + alpha * (reclameReward(nextState) + gamma * maximize(nextState));
+                    * (1 - alpha) + alpha * (reward + gamma * maxQValueAction(nextstate));
 
-                //In the end, we update the state and the current total reward
-                state = nextState;
-                currentReward += reclameReward(nextState);                
+                //In the end, we update the state and the total reward
+                state = nextstate;
+                episodeReward += reward;                
             }
 
             /*
              * At end of every episode, we save the actual reward for making some analytics on it 
              * and we update the epsilon value
              */
-            rewards[episode] = currentReward;
+            rewards[episode] = episodeReward;
             epsilon = min_exploration_rate + (max_exploration_rate - min_exploration_rate) *
                 Mathf.Exp(-exploration_decay_rate * episode);
 
-            Debug.Log("Episodio :" + episode + " Ricompensa: " + currentReward + "Epsilon :" + epsilon);
+            Debug.Log("Episodio :" + episode + " Ricompensa: " + episodeReward + "Epsilon :" + epsilon);
         }
         //Memorizing the Q-table values and rewards on file
         writeQtableValuesOnFile();
@@ -171,9 +149,8 @@ public class QLearner : MonoBehaviour
         Debug.Log("Starting game...");
         byte action;
         byte[] state = new byte[6];
-        byte[] nextState = new byte[6];
-
-        Vector3 oldPosition, newPosition;
+        byte[] nextstate = new byte[6];
+        
         for (int episode = 0; episode < numEpisodes; episode++)
         {
             Debug.Log("Starting episode " + episode);
@@ -181,25 +158,69 @@ public class QLearner : MonoBehaviour
             state = raycastController.getCurrentState();
             while (!collided)
             {
-                action = maximize(state);
+                action = findBestAction(state);
+                
+                Debug.Log("Action: " + (Actions)action);
                 performAction(carUserControl, (Actions)action);
-
-                newPosition = transform.position;
-                do
-                {
-                    rigidbody.velocity = velocityLimiter(rigidbody.velocity);
-
-                    oldPosition = newPosition;
+                while (frame < 20)
                     yield return null;
-                    newPosition = transform.position;
-                    if (newPosition == oldPosition)
-                        break;
-                    nextState = raycastController.getCurrentState();
-                } while (compareArrays(state, nextState));
-
-                state = nextState;
+                frame = 0;
+                nextstate = raycastController.getCurrentState();
+                
+                //yield return step(state, nextstate, (Actions)action);
+                state = nextstate;
             }
         }
+    }
+
+    private IEnumerator step(byte[] state, byte[] nextstate, Actions action)
+    {
+        /*
+        * We wait until car doesn't change it's state
+        * For avoiding deadlocks (i.e., if the car has velocity zero and
+        * has "right_only", it's state will never change), we make a check on 
+        * the car's coordinates on the map
+        */
+        Vector3 oldPosition, newPosition;
+        byte[] nextstatetmp = null;
+        Debug.Log("\t\tACTION: " + action);
+        performAction(carUserControl, action);
+
+        newPosition = transform.position;
+        do
+        {
+            //We want to simplify the model since we're in a discrete case
+            rigidbody.velocity = velocityLimiter(rigidbody.velocity);
+
+            oldPosition = newPosition;
+            yield return null;
+            newPosition = transform.position;
+            if (newPosition == oldPosition)
+                break;
+            nextstatetmp = raycastController.getCurrentState();
+        } while (compareArrays(state, nextstatetmp));
+
+        
+        for (byte i = 0; i < nextstate.Length; i++)
+            if (newPosition != oldPosition)
+                nextstate[i] = nextstatetmp[i];
+            else
+                nextstate[i] = state[i];
+    }
+
+    private byte epsilonGreedy(byte[] state)
+    {
+        /*
+        * Epsilon-greedy algorithm: if that rand value is greater than a fixed epsilon, we perform ad exploitation. Instead, we perform 
+        * the exploration
+        * */
+        float randValue;
+
+        randValue = (rand.Next(0, 1000)) / 1000f;
+        if (randValue > epsilon)
+            return findBestAction(state);
+        else
+            return (byte)rand.Next(0, 9);
     }
 
     private Vector3 velocityLimiter(Vector3 velocity)
@@ -232,7 +253,7 @@ public class QLearner : MonoBehaviour
         return true;
     }
 
-    private byte maximize(byte[] state)
+    private byte findBestAction(byte[] state)
     {
         byte bestIndexValue = 0;
         float bestValue = Single.MinValue;
@@ -249,33 +270,39 @@ public class QLearner : MonoBehaviour
         return bestIndexValue;
     }
 
+    private float maxQValueAction(byte[] state)
+    {
+        byte index = findBestAction(state);
+        return qTable[state[RAY_SX], state[RAY_SX_MIDDLE], state[RAY_MIDDLE], state[RAY_DX_MIDDLE], state[RAY_DX], state[VELOCITY], index];
+    }
+
     private void performAction(CarUserControl carUserControl, Actions action)
     {
         switch (action)
         {
             case Actions.left_accelleration:
-                carUserControl.setHorizontal(-0.6f);
+                carUserControl.setHorizontal(-0.65f);
                 carUserControl.setVertical(0.3f);
                 break;
             case Actions.left_only:
-                carUserControl.setHorizontal(-0.85f);
+                carUserControl.setHorizontal(-0.90f);
                 carUserControl.setVertical(0);
                 break;
             case Actions.left_reverse:
-                carUserControl.setHorizontal(-0.6f);
-                carUserControl.setVertical(-0.3f);
+                carUserControl.setHorizontal(-0.65f);
+                carUserControl.setVertical(-0.35f);
                 break;
             case Actions.right_accelleration:
-                carUserControl.setHorizontal(0.6f);
+                carUserControl.setHorizontal(0.65f);
                 carUserControl.setVertical(0.3f);
                 break;
             case Actions.right_only:
-                carUserControl.setHorizontal(0.85f);
+                carUserControl.setHorizontal(0.90f);
                 carUserControl.setVertical(0);
                 break;
             case Actions.right_reverse:
-                carUserControl.setHorizontal(0.6f);
-                carUserControl.setVertical(-0.3f);
+                carUserControl.setHorizontal(0.65f);
+                carUserControl.setVertical(-0.35f);
                 break;
             case Actions.straight_accelleration:
                 carUserControl.setHorizontal(0);
@@ -316,14 +343,28 @@ public class QLearner : MonoBehaviour
         return score;
     }
     
-    private float reclameReward(byte[] state)
+    private float reclameReward(byte[] state, byte actionIndex, byte[] nextstate)
     {
-        float velocityReward;
-        float sensorReward = getScore(state[RAY_SX]) +
+        float reward;
+        float velocityWeight = 1;
+        float velocity = transform.InverseTransformDirection(rigidbody.velocity).z;
+        velocity = Mathf.Abs(velocity) < 1e-2 ? 0 : velocity;
+
+        float sensorScore = getScore(state[RAY_SX]) +
             getScore(state[RAY_SX_MIDDLE]) +
             getScore(state[RAY_MIDDLE]) +
             getScore(state[RAY_DX]) +
             getScore(state[RAY_DX_MIDDLE]);
+
+        if (sensorScore <= 10 && sensorScore > 5)
+            reward = velocity * velocityWeight * 1.5f;
+        else
+            reward = -velocity * velocityWeight * 2;
+
+        if(collided)
+            reward += -10000;
+
+        return reward;
         /*
          * Acceleration's direction gives a bonus (or a penalty) on the reward.
          * The idea is this one: 
@@ -334,14 +375,15 @@ public class QLearner : MonoBehaviour
          * We consider some intervals on the sum of the first 5 rewards to differentiate the cases.
          * The case described above, is the first one (5 < sensorReward <= 10).
          */
-        if(sensorReward <= 10 && sensorReward > 5)
+        /*
+        if(sensorReward <= 10 && sensorReward > 0)
         {
             if (state[VELOCITY] == 2)
                 velocityReward = 30;
             else
                 velocityReward = -50;
         }
-        else if(sensorReward <= 5 && sensorReward > -1.5)
+        else /*if(sensorReward <= 5 && sensorReward > -1.5)
         {
             if (state[VELOCITY] == 0)
                 velocityReward = 5;
@@ -355,14 +397,15 @@ public class QLearner : MonoBehaviour
             else
                 velocityReward = -30;
         }
-        else
+        else*/
+        /*
         {
             if (state[VELOCITY] == 0)
                 velocityReward = 30;
             else
                 velocityReward = -50;
         }
-        return velocityReward + sensorReward;
+        */
     }
 
     private void writeQtableValuesOnFile()
@@ -379,8 +422,8 @@ public class QLearner : MonoBehaviour
                         for (byte d = 0; d < RaycastController.numRayIntervals; d++)
                             for (byte e = 0; e < RaycastController.numRayIntervals; e++)
                                 for (byte f = 0; f < RaycastController.numAccelerationIntervals; f++)
-                                    for(byte g = 0; g < numActions; g++)
-                                        tw.WriteLine(qTable[a, b, c, d, e, f, g]);
+                                    for (byte g = 0; g < numActions; g++)
+                                    tw.WriteLine(qTable[a, b, c, d, e, f, g]);
         }
     }
 
@@ -409,7 +452,12 @@ public class QLearner : MonoBehaviour
                     for (byte d = 0; d < RaycastController.numRayIntervals; d++)
                         for (byte e = 0; e < RaycastController.numRayIntervals; e++)
                             for (byte f = 0; f < RaycastController.numAccelerationIntervals; f++)
-                                for (byte g = 0; g < QLearner.numActions; g++)
+                                for (byte g = 0; g < numActions; g++)
                                     qTable[a, b, c, d, e, f, g] = float.Parse(lines[index++]);
+    }
+
+    public void Update()
+    {
+        frame++;
     }
 }
