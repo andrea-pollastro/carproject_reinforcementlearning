@@ -10,7 +10,7 @@ public class QLearner : MonoBehaviour
     //frame counter
     private byte frame = 0;
     //hyperparameters
-    private int T = 200;
+    private int T = 100;
     private static int numEpisodes = 500;
     private float[] rewards = new float[numEpisodes];
     private float alpha = .1f;
@@ -230,12 +230,12 @@ public class QLearner : MonoBehaviour
         switch (action)
         {
             case Actions.left_accelleration:
-                carUserControl.setHorizontal(-0.7f);
-                carUserControl.setVertical(0.25f);
+                carUserControl.setHorizontal(-0.75f);
+                carUserControl.setVertical(0.20f);
                 break;
             case Actions.right_accelleration:
-                carUserControl.setHorizontal(0.7f);
-                carUserControl.setVertical(0.25f);
+                carUserControl.setHorizontal(0.75f);
+                carUserControl.setVertical(0.20f);
                 break;
             case Actions.straight_accelleration:
                 carUserControl.setHorizontal(0);
