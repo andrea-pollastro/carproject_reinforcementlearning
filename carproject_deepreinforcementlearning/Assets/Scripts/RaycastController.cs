@@ -76,8 +76,8 @@ public class RaycastController : MonoBehaviour
 
     private float transformHitPoint(float k, float x)
     {
-        //Codomain: [-1,1] now, [-1.5,.5]
-        return (2 * (k / x) - 1) - 0.5f;
+        //Codomain: [-1,1]
+        return 2 * (k / x) - 1;
     }
 
     public void resetCurrentState()

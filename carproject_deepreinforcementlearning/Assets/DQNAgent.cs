@@ -44,7 +44,7 @@ public class DQNAgent : Agent
     private float normalizeVelocity(float x)
     {
         //Needed for having velocity in [0,1]
-        return (x - minVelocity) / (150f - minVelocity);
+        return x/150f;
     }
 
     private void performAction(float steeringAngle, float acceleration)
@@ -64,7 +64,7 @@ public class DQNAgent : Agent
     public override void AgentAction(float[] vectorAction, string textAction)
     {
         float reward;
-        float velocity = transform.InverseTransformDirection(rigidbody.velocity).z;
+        float velocity;
         float steeringAngle = vectorAction[0];
         float acceleration = vectorAction[1];
         //float accelerationScore;
@@ -73,6 +73,7 @@ public class DQNAgent : Agent
         float w2 = 0.01f;
 
         performAction(steeringAngle, acceleration);
+        velocity = transform.InverseTransformDirection(rigidbody.velocity).z;
         //reward calculation
         /*
         accelerationScore = acceleration * getRaysScore(); //TODO: controlla se servono solo i centrali
@@ -82,7 +83,7 @@ public class DQNAgent : Agent
         //reward = collided ? -10f - w1 * acceleration : .1f + w2 * acceleration;
         //if (!collided && (velocity <= 0))
         //    reward *= -1;
-        reward = collided ? -100f : .1f * getMiddleRaysScore() * velocity;
+        reward = collided ? -10f : .1f + normalizeVelocity(velocity);
 
         SetReward(reward);
         if (collided)
@@ -94,15 +95,6 @@ public class DQNAgent : Agent
         float res = 0;
         for (int i = 0; i < state.Length; i++)
             res += state[i];
-        return res;
-    }
-
-    private float getMiddleRaysScore()
-    {
-        int middle = state.Length / 2;
-        float res = state[middle];
-        for (byte i = 0; i < 5; i++)
-            res += state[middle + i] + state[middle - i];
         return res;
     }
     
