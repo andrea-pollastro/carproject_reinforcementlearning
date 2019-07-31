@@ -76,8 +76,8 @@ public class RaycastController : MonoBehaviour
 
     private float transformHitPoint(float k, float x)
     {
-        //Codomain: [-1,1]
-        return 2 * (k / x) - 1;
+        //Codomain: [-1,1] now, [-1.5,.5]
+        return (2 * (k / x) - 1) - 0.5f;
     }
 
     public void resetCurrentState()
@@ -86,9 +86,9 @@ public class RaycastController : MonoBehaviour
         collided = false;
     }
 
-    public byte[] getCurrentState()
+    public float[] getCurrentState()
     {
-        return (byte[])state.Clone();
+        return (float[])state.Clone();
     }
 
     private void OnCollisionEnter(Collision collision)

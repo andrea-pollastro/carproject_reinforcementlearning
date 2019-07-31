@@ -8,6 +8,7 @@ public class DQNAgent : Agent
     private Rigidbody rigidbody;
     private CarUserControl carUserControl;
     private RaycastController raycastController;
+    float minVelocity = 0;
     private bool collided;
     //state
     private float[] state = new float[RaycastController.numRays];
@@ -33,31 +34,55 @@ public class DQNAgent : Agent
 
     public override void CollectObservations()
     {
+        state = raycastController.getCurrentState();
         //raystate
         AddVectorObs(state);
         //car's velocity
-        AddVectorObs(transform.InverseTransformDirection(rigidbody.velocity).z);
+        AddVectorObs(normalizeVelocity(transform.InverseTransformDirection(rigidbody.velocity).z));
+    }
+
+    private float normalizeVelocity(float x)
+    {
+        //Needed for having velocity in [0,1]
+        return (x - minVelocity) / (150f - minVelocity);
     }
 
     private void performAction(float steeringAngle, float acceleration)
     {
         carUserControl.setHorizontal(steeringAngle);
         carUserControl.setVertical(acceleration);
+        rigidbody.velocity = negativeVelocityLimiter(rigidbody.velocity);
+    }
+
+    private Vector3 negativeVelocityLimiter(Vector3 velocity)
+    {
+        Vector3 localVelocity = transform.InverseTransformDirection(velocity);
+        localVelocity.z = localVelocity.z < minVelocity ? minVelocity : localVelocity.z;
+        return transform.TransformDirection(localVelocity);
     }
 
     public override void AgentAction(float[] vectorAction, string textAction)
     {
         float reward;
+        float velocity = transform.InverseTransformDirection(rigidbody.velocity).z;
         float steeringAngle = vectorAction[0];
         float acceleration = vectorAction[1];
-        float accelerationScore;
-        float steeringScore;
+        //float accelerationScore;
+        //float steeringScore;
+        float w1 = 0.1f;
+        float w2 = 0.01f;
 
         performAction(steeringAngle, acceleration);
         //reward calculation
+        /*
         accelerationScore = acceleration * getRaysScore(); //TODO: controlla se servono solo i centrali
         steeringScore = getSteeringScore(steeringAngle, acceleration);
-        reward = collided ? -1000 : accelerationScore + steeringScore;
+        reward = collided ? (accelerationScore + steeringScore) - 10 : accelerationScore + steeringScore;
+        */
+        //reward = collided ? -10f - w1 * acceleration : .1f + w2 * acceleration;
+        //if (!collided && (velocity <= 0))
+        //    reward *= -1;
+        reward = collided ? -100f : .1f * getMiddleRaysScore() * velocity;
 
         SetReward(reward);
         if (collided)
@@ -71,6 +96,15 @@ public class DQNAgent : Agent
             res += state[i];
         return res;
     }
+
+    private float getMiddleRaysScore()
+    {
+        int middle = state.Length / 2;
+        float res = state[middle];
+        for (byte i = 0; i < 5; i++)
+            res += state[middle + i] + state[middle - i];
+        return res;
+    }
     
     private float getSteeringScore(float steeringAngle, float acceleration)
     {
@@ -79,6 +113,7 @@ public class DQNAgent : Agent
         int endPoint = (steeringAngle * acceleration) < 0 ? state.Length/2 : state.Length;
         for (int i = startPoint; i < endPoint; i++)
             res += state[i];
+        res = acceleration > 0 ? Mathf.Abs(steeringAngle) * res : -Mathf.Abs(steeringAngle) * res;
         return res;
     }
 
