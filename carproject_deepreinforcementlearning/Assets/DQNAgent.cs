@@ -8,7 +8,7 @@ public class DQNAgent : Agent
     private Rigidbody rigidbody;
     private CarUserControl carUserControl;
     private RaycastController raycastController;
-    float minVelocity = 0;
+    float minVelocity = 15;
     private bool collided;
     //state
     private float[] state = new float[RaycastController.numRays];
@@ -44,7 +44,7 @@ public class DQNAgent : Agent
     private float normalizeVelocity(float x)
     {
         //Needed for having velocity in [0,1]
-        return x/150f;
+        return (x - minVelocity)/(150f - minVelocity);
     }
 
     private void performAction(float steeringAngle, float acceleration)
@@ -69,8 +69,8 @@ public class DQNAgent : Agent
         float acceleration = vectorAction[1];
         //float accelerationScore;
         //float steeringScore;
-        float w1 = 0.1f;
-        float w2 = 0.01f;
+        float w1 = 0.99f;
+        float w2 = 1.5f;
 
         performAction(steeringAngle, acceleration);
         velocity = transform.InverseTransformDirection(rigidbody.velocity).z;
@@ -83,7 +83,7 @@ public class DQNAgent : Agent
         //reward = collided ? -10f - w1 * acceleration : .1f + w2 * acceleration;
         //if (!collided && (velocity <= 0))
         //    reward *= -1;
-        reward = collided ? -10f : .1f + normalizeVelocity(velocity);
+        reward = collided ? -10f - w2 * acceleration : 1f + w1 * acceleration;
 
         SetReward(reward);
         if (collided)
