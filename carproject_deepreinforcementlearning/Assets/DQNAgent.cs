@@ -69,7 +69,7 @@ public class DQNAgent : Agent
         float acceleration = vectorAction[1];
         //float accelerationScore;
         //float steeringScore;
-        float w1 = 0.99f;
+        float w1 = 1.40f;
         float w2 = 1.5f;
 
         performAction(steeringAngle, acceleration);
