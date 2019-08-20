@@ -35,3 +35,4 @@ sysinfo.txt
 *.apk
 *.unitypackage
 carproject_reinforcementlearning/ProjectSettings/ProjectSettings.asset
+carproject_deepreinforcementlearning/UnitySDK.log
