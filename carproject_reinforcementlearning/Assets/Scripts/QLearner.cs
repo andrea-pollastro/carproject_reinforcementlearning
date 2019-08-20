@@ -10,8 +10,8 @@ public class QLearner : MonoBehaviour
     //frame counter
     private byte frame = 0;
     //hyperparameters
-    private int T = 100;
-    private static int numEpisodes = 500;
+    private int T = 300;
+    private static int numEpisodes = 5000;
     private float[] rewards = new float[numEpisodes];
     private float alpha = .1f;
     private float gamma = .9f;
@@ -244,59 +244,14 @@ public class QLearner : MonoBehaviour
         }
     }
 
-    private float getScore(int stateValue)
-    {
-        float score = 0;
-        switch (stateValue)
-        {
-            case 3:
-                score = 1f;
-                break;
-            case 2:
-                score = -.3f;
-                break;
-            case 1:
-                score = -0.8f;
-                break;
-            case 0:
-                score = -1.5f;
-                break;
-        }
-        return score;
-    }
-    
     private float reclameReward(byte[] state, byte action)
     {
         float reward;
-        float scoreState = 0;
+        float velocity;
 
-        //state score
-        float leftSensorsScore = getScore(state[RAY_SX]) + getScore(state[RAY_SX_MIDDLE]) + getScore(state[RAY_MIDDLE]);
-        float middleSensorsScore = getScore(state[RAY_SX_MIDDLE]) + getScore(state[RAY_MIDDLE]) + getScore(state[RAY_DX_MIDDLE]);
-        float rightSensorsScore = getScore(state[RAY_DX]) + getScore(state[RAY_DX_MIDDLE]) + getScore(state[RAY_MIDDLE]);
-        //velocity value
-        float velocity = transform.InverseTransformDirection(rigidbody.velocity).z;
-
-        //action score
-        switch (action)
-        {
-            case 0:
-                scoreState = leftSensorsScore;
-                break;
-            case 1:
-                scoreState = rightSensorsScore;
-                break;
-            case 2:
-            case 3:
-                scoreState = middleSensorsScore;
-                break;
-        }
+        velocity = transform.InverseTransformDirection(rigidbody.velocity).z;
         //reward calculation
-        reward = velocity * scoreState;
-
-        //ending state: collision
-        if (collided)
-            reward += -1000;
+        reward = collided ? -20f : .05f;
 
         return reward;
     }
