@@ -189,7 +189,7 @@ public class QLearner : MonoBehaviour
 
     private void initCarState()
     {
-        transform.position = Vector3.zero;
+        transform.position = new Vector3(240, 0, 0);//Vector3.zero;
         transform.rotation = Quaternion.Euler(Vector3.zero);
         rigidbody.velocity = Vector3.zero;
         rigidbody.angularVelocity = Vector3.zero;
