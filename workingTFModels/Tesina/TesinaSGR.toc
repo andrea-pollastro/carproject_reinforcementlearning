@@ -1,0 +1,42 @@
+\babel@toc {italian}{}
+\babel@toc {italian}{}
+\contentsline {chapter}{\numberline {1}Introduzione al problema}{4}{chapter.1}% 
+\contentsline {chapter}{\numberline {2}Tecnologie e Tools per lo sviluppo}{5}{chapter.2}% 
+\contentsline {section}{\numberline {2.1}Unity}{5}{section.2.1}% 
+\contentsline {subsection}{\numberline {2.1.1}Funzionamento di base}{6}{subsection.2.1.1}% 
+\contentsline {subsection}{\numberline {2.1.2}I Components}{6}{subsection.2.1.2}% 
+\contentsline {subsection}{\numberline {2.1.3}Classi necessarie per lo sviluppo}{7}{subsection.2.1.3}% 
+\contentsline {section}{\numberline {2.2}Il tool ProBuilder}{7}{section.2.2}% 
+\contentsline {section}{\numberline {2.3}Anaconda}{7}{section.2.3}% 
+\contentsline {section}{\numberline {2.4}Altri tools}{7}{section.2.4}% 
+\contentsline {chapter}{\numberline {3}Il Reinforcement learning}{8}{chapter.3}% 
+\contentsline {section}{\numberline {3.1}Il sistema di ricompensa}{8}{section.3.1}% 
+\contentsline {section}{\numberline {3.2}Formalizzazione del modello}{9}{section.3.2}% 
+\contentsline {subsection}{\numberline {3.2.1}Le reward (ricompense)}{10}{subsection.3.2.1}% 
+\contentsline {subsection}{\numberline {3.2.2}Definizione di trajectory}{10}{subsection.3.2.2}% 
+\contentsline {subsection}{\numberline {3.2.3}Probabilit\IeC {\`a} delle transizioni}{11}{subsection.3.2.3}% 
+\contentsline {subsection}{\numberline {3.2.4}Le policy}{12}{subsection.3.2.4}% 
+\contentsline {subsection}{\numberline {3.2.5}Ritorno atteso e fattore di sconto}{12}{subsection.3.2.5}% 
+\contentsline {subsection}{\numberline {3.2.6}Value function}{13}{subsection.3.2.6}% 
+\contentsline {subsubsection}{State-value function}{13}{section*.2}% 
+\contentsline {subsubsection}{Action-value function}{13}{section*.3}% 
+\contentsline {subsection}{\numberline {3.2.7}Policy ottimali}{14}{subsection.3.2.7}% 
+\contentsline {subsection}{\numberline {3.2.8}Equazione di Bellman}{14}{subsection.3.2.8}% 
+\contentsline {chapter}{\numberline {4}Q-Learning}{15}{chapter.4}% 
+\contentsline {section}{\numberline {4.1}Iterazione per valore}{15}{section.4.1}% 
+\contentsline {section}{\numberline {4.2}Exploration ed Exploitation}{16}{section.4.2}% 
+\contentsline {paragraph}{Exploration}{16}{section*.4}% 
+\contentsline {paragraph}{Exploitation}{16}{section*.5}% 
+\contentsline {section}{\numberline {4.3}Aggiornamento della Q-table}{16}{section.4.3}% 
+\contentsline {section}{\numberline {4.4}Episodi}{17}{section.4.4}% 
+\contentsline {section}{\numberline {4.5}Applicazione del modello al problema}{17}{section.4.5}% 
+\contentsline {section}{\numberline {4.6}Risultati}{18}{section.4.6}% 
+\contentsline {chapter}{\numberline {5}Deep Q-Learning}{20}{chapter.5}% 
+\contentsline {section}{\numberline {5.1}La rete deep}{20}{section.5.1}% 
+\contentsline {subsection}{\numberline {5.1.1}Apprendimento}{21}{subsection.5.1.1}% 
+\contentsline {subsubsection}{Policy gradient}{21}{section*.6}% 
+\contentsline {subsubsection}{PPO}{23}{section*.7}% 
+\contentsline {section}{\numberline {5.2}Experience replay}{23}{section.5.2}% 
+\contentsline {section}{\numberline {5.3}Algoritmo: Deep Q-Learning con experience replay}{24}{section.5.3}% 
+\contentsline {section}{\numberline {5.4}Versione senza cnn}{24}{section.5.4}% 
+\contentsline {section}{\numberline {5.5}Risultati ottenuti}{24}{section.5.5}% 
