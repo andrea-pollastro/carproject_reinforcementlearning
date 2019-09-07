@@ -21,7 +21,8 @@ public class DQNAgent : Agent
 
     public override void AgentReset()
     {
-        transform.position = new Vector3(235,0,0);//Vector3.zero;
+        //transform.position = new Vector3(275,0,0);//Vector3.zero;
+        transform.position = Vector3.zero;
         transform.rotation = Quaternion.Euler(Vector3.zero);
         rigidbody.velocity = Vector3.zero;
         rigidbody.angularVelocity = Vector3.zero;

@@ -24,7 +24,7 @@ public class DQNAgent : Agent
 
     public override void AgentReset()
     {
-        transform.position = new Vector3(238,0,0);//Vector3.zero;
+        transform.position = new Vector3(234,0,0);//Vector3.zero;
         transform.rotation = Quaternion.Euler(Vector3.zero);
         rigidbody.velocity = Vector3.zero;
         rigidbody.angularVelocity = Vector3.zero;
@@ -67,22 +67,13 @@ public class DQNAgent : Agent
         float velocity;
         float steeringAngle = vectorAction[0];
         float acceleration = vectorAction[1];
-        //float accelerationScore;
-        //float steeringScore;
+
         float w1 = 1.40f;
         float w2 = 1.5f;
 
         performAction(steeringAngle, acceleration);
         velocity = transform.InverseTransformDirection(rigidbody.velocity).z;
-        //reward calculation
-        /*
-        accelerationScore = acceleration * getRaysScore(); //TODO: controlla se servono solo i centrali
-        steeringScore = getSteeringScore(steeringAngle, acceleration);
-        reward = collided ? (accelerationScore + steeringScore) - 10 : accelerationScore + steeringScore;
-        */
-        //reward = collided ? -10f - w1 * acceleration : .1f + w2 * acceleration;
-        //if (!collided && (velocity <= 0))
-        //    reward *= -1;
+        
         reward = collided ? -10f - w2 * acceleration : 1f + w1 * acceleration;
 
         SetReward(reward);

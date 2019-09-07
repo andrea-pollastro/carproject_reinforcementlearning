@@ -161,9 +161,9 @@ public class QLearner : MonoBehaviour
     private IEnumerator step(int numFrames, Actions action)
     {
         performAction(action);
+//        rigidbody.velocity = velocityLimiter(rigidbody.velocity);
         while (frame < numFrames)
         {
-            rigidbody.velocity = velocityLimiter(rigidbody.velocity);
             yield return null;
         }
         frame = 0;
@@ -189,7 +189,7 @@ public class QLearner : MonoBehaviour
 
     private void initCarState()
     {
-        transform.position = new Vector3(240, 0, 0);//Vector3.zero;
+        transform.position = new Vector3(278, 0, -30);//Vector3.zero;
         transform.rotation = Quaternion.Euler(Vector3.zero);
         rigidbody.velocity = Vector3.zero;
         rigidbody.angularVelocity = Vector3.zero;
