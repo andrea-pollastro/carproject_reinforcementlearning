@@ -4,9 +4,9 @@ Our goal was to experiment <i>Reinforcement Learning</i> techniques in a simulat
 
 Our "learning experiments" were divided in 3 parts:
 <ol>
-  <li><b>Reinforcement Learning</b> using <i>Bellman equation<\li>
-  <li><b>Deep Reinforcement Learning</b> using a <i>Convolutional Neural Network</i><\li>
-  <li><b>Deep Reinforcement Learning</b> using a <i>Feed-Forward Neural Network</i> with 3 layers and 512 nodes<\li>
+  <li><b>Reinforcement Learning</b> using <i>Bellman equation</li>
+  <li><b>Deep Reinforcement Learning</b> using a <i>Convolutional Neural Network</i></li>
+  <li><b>Deep Reinforcement Learning</b> using a <i>Feed-Forward Neural Network</i> with 3 layers and 512 nodes</li>
 </ol>
 In all the three parts, we used n-rays (starting from the front of the car) to let the car read the environment using Raycasting (just like using lasers/sonars). Any scan of the environment represented the current state on which we could work for the learning phase.
 We've made this project using <b>Unity</b> and, moreover, we've used the tool <b>ML Agent</b> provided by Unity for the ANN realization. 
