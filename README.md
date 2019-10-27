@@ -1,5 +1,5 @@
 # Car project: learning with RL techniques
-I made this project with the colleague Francesco Romeo (https://github.com/francesco1996r). We're two MSc students at "Università degli Studi Di Napoli 'Federico II' " and we made this project as a final part of an exam about robotics. 
+I made this project with the colleague Francesco Romeo (https://github.com/francesco1996r). We're two MSc students in CS at "Università degli Studi Di Napoli 'Federico II' " and we made this project as a final part of an exam about robotics. 
 Our goal was to experiment <i>Reinforcement Learning</i> techniques in a simulated environment and for this reason we've realized a car game which purpose was to let the car learning to drive in a simple environment (drawn only by bareers). 
 
 Our "learning experiments" were divided in 3 parts:
