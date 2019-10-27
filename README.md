@@ -4,7 +4,7 @@ Our goal was to experiment <i>Reinforcement Learning</i> techniques in a simulat
 
 Our "learning experiments" were divided in 3 parts:
 <ol>
-  <li><b>Reinforcement Learning</b> using <i>Bellman equation</li>
+  <li><b>Reinforcement Learning</b> using <i>Bellman equation</i></li>
   <li><b>Deep Reinforcement Learning</b> using a <i>Convolutional Neural Network</i></li>
   <li><b>Deep Reinforcement Learning</b> using a <i>Feed-Forward Neural Network</i> with 3 layers and 512 nodes</li>
 </ol>
