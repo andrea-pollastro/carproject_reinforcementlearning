@@ -58,7 +58,7 @@ public class QLearner : MonoBehaviour
 
     void Start()
     {
-        bool learn = false;
+        bool learn = true;
         //Getting components for driving the car
         carUserControl = GetComponent<CarUserControl>();
         rigidbody = GetComponent<Rigidbody>();
@@ -189,7 +189,8 @@ public class QLearner : MonoBehaviour
 
     private void initCarState()
     {
-        transform.position = new Vector3(278, 0, -30);//Vector3.zero;
+        //transform.position = new Vector3(278, 0, -30);//Vector3.zero;
+        transform.position = Vector3.zero;
         transform.rotation = Quaternion.Euler(Vector3.zero);
         rigidbody.velocity = Vector3.zero;
         rigidbody.angularVelocity = Vector3.zero;
