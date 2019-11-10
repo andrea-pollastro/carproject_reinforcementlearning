@@ -10,3 +10,5 @@ Our "learning experiments" were divided in 3 parts:
 </ol>
 In all the three parts, we used n-rays (starting from the front of the car) to let the car read the environment using Raycasting (just like using lasers/sonars). Any scan of the environment represented the current state on which we could work for the learning phase.
 We've made this project using <b>Unity</b> and, moreover, we've used the tool <b>ML Agent</b> provided by Unity for the ANN realization. 
+
+<a href="https://github.com/andrea-pollastro/carproject_reinforcementlearning/blob/master/ProjectResults.pdf">Here</a> you can find all the results we've got from the project.
